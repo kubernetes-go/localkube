@@ -1,0 +1,3 @@
+extraEnvVars:
+  DockerImageTag: {{ dockerImageTag }}
+  cluster: microk8s

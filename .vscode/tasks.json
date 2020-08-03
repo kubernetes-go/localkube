@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "build/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - build",
+			"detail": "npm run build-ts && copyfiles ./ci-cd.yaml ./dist/ && copyfiles ./chart/*.yaml ./dist/"
+		}
+	]
+}

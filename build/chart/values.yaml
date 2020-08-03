@@ -1,0 +1,10 @@
+appFromExternalRepo:
+  enabled: false
+image:
+  registry: localhost:32000
+  repository: ugc
+  tag: {{ dockerImageTag }}
+command: [dotnet]
+args: [SampleNetCoreWebApp.dll]
+containerPort: 80
+bindURLs: http://+:80
