@@ -1,0 +1,11 @@
+appFromExternalRepo:
+  enabled: false
+image:
+  repository: {{ dockerRepository }}
+  tag: {{ dockerImageTag }}
+command: [dotnet]
+args: [SampleNetCoreWebApp.dll]
+containerPort: 80
+bindURLs: http://+:80
+extraEnvVars:
+  DockerImageTag: {{ dockerImageTag }}

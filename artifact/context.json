@@ -1,0 +1,5 @@
+{
+    "dockerRepository": "wujun4code/asp-net-core",
+    "dockerImage": "docker.io/wujun4code/asp-net-core:master-b7f5103",
+    "dockerImageTag": "master-b7f5103"
+}

@@ -1,5 +1,6 @@
 {
-  "name": "localkube",
+  "name": "easy-ci-cd",
+  "bin": "./dist/index.js",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",
