@@ -1,0 +1,19 @@
+version: 1
+name: docker
+kind: docker
+registry: docker.io
+repository: wujun4code/asp-net-core
+filePath: "../src/SampleNetCoreWebApp"
+fileName: "Dockerfile"
+buildPath: "../src"
+---
+version: 1
+name: helm
+kind: helm
+repoName: bitnami
+repoUrl: https://charts.bitnami.com/bitnami
+chartName: bitnami/aspnet-core
+valuesFolder: ./chart/
+namespace: ugc
+appName: api
+contexts: ["microk8s"]
