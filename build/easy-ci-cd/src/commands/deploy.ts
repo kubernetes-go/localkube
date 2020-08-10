@@ -10,10 +10,11 @@ export default class Package extends Command {
   static flags = {
     help: flags.help({ char: "h" }),
     // flag with a value (-n, --name=VALUE)
-    app: flags.string({ char: "a", description: "app to package" }),
+    app: flags.string({ char: "a", description: "app to deploy" }),
+    cluster: flags.string({ char: "c", description: "cluster to deploy" }),
   };
 
-  static args = [{ name: "app" }];
+  static args = [{ name: "app" }, { name: "cluster" }];
 
   async run() {
     const { args, flags } = this.parse(Package);
@@ -22,16 +23,19 @@ export default class Package extends Command {
 
     try {
       const app = flags.app ?? "app";
+      const cluster = flags.cluster;
       pipelineContext.loadBuildYaml(app);
-      pipelineContext.restoreFromTemp();
+
       let helmShell = new HelmShell(
         pipelineContext.helm.config,
         pipelineContext
       );
 
-      pipelineContext.restoreFromTemp();
-      pipelineContext.placeholders.set("eidVersion", this.config.version);
-      helmShell.render();
+      if (cluster == undefined) {
+        await helmShell.publishAll();
+      } else {
+        await helmShell.publish(cluster);
+      }
     } catch (e) {
       console.log(e);
     }

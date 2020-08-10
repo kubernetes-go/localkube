@@ -9,3 +9,5 @@ containerPort: 80
 bindURLs: http://+:80
 extraEnvVars:
   DockerImageTag: {{ dockerImageTag }}
+commonLabels:
+  eid/version: {{ eidVersion }}

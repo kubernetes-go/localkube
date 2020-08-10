@@ -16,4 +16,5 @@ chartName: bitnami/aspnet-core
 valuesFolder: ./chart/
 namespace: ugc
 appName: api
-contexts: ["microk8s"]
+kubeconfig: ./kubeconfig
+contexts: ["microk8s","docker-for-desktop"]

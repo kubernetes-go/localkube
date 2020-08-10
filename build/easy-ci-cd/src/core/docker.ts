@@ -13,22 +13,23 @@ export class DockerShell {
   }
 
   public async build() {
-    let tagFormat = this.config.tagFormat || "gitBranchName-gitCommitHash";
-    let command = "build";
-    let tag = tagFormat
+    const tagFormat = this.config.tagFormat || "gitBranchName-gitCommitHash";
+    const command = "build";
+    const tag = tagFormat
       .replace("gitBranchName", this.context.git.branchName)
       .replace("gitCommitHash", this.context.git.commitHash);
-    let image = `${this.config.registry}/${this.config.repository}:${tag}`;
-    let currentDirectory = resolve(
+    console.log(`tag is ${tag}`);
+    const image = `${this.config.registry}/${this.config.repository}:${tag}`;
+    const currentDirectory = resolve(
       this.context.cwd,
       this.context.appFolderName
     );
     console.log(`app folder name is ${this.context.appFolderName}`);
-    let filePath = resolve(currentDirectory, this.config.filePath);
-    let buildPath = resolve(currentDirectory, this.config.buildPath);
-    let commandLine = `${this.dockerCommandAlias} ${command} -f ${filePath}/${this.config.fileName} -t ${image} ${buildPath}`;
-    //let commandLine = `${this.dockerCommandAlias} ${command} -f ${this.config.filePath}/${this.config.fileName} -t ${image} ${this.config.buildPath}`;
-    let shell = new Shell();
+    const filePath = resolve(currentDirectory, this.config.filePath);
+    const buildPath = resolve(currentDirectory, this.config.buildPath);
+    const commandLine = `${this.dockerCommandAlias} ${command} -f ${filePath}/${this.config.fileName} -t ${image} ${buildPath}`;
+    // let commandLine = `${this.dockerCommandAlias} ${command} -f ${this.config.filePath}/${this.config.fileName} -t ${image} ${this.config.buildPath}`;
+    const shell = new Shell();
     await shell.execAsync(commandLine);
     if (this.context.docker == null) this.context.docker = new DockerContext();
     this.context.placeholders.set("dockerRepository", this.config.repository);
@@ -36,13 +37,13 @@ export class DockerShell {
     this.context.docker.image = image;
     this.context.placeholders.set("dockerImageTag", tag);
     this.context.docker.imageTag = tag;
-    await this.context.saveToTemp();
+    this.context.saveToTemp();
   }
 
   public async push() {
-    let command = "push";
-    let commandLine = `${this.dockerCommandAlias} ${command} ${this.context.docker.image}`;
-    let shell = new Shell();
+    const command = "push";
+    const commandLine = `${this.dockerCommandAlias} ${command} ${this.context.docker.image}`;
+    const shell = new Shell();
     await shell.execAsync(commandLine);
   }
 }
