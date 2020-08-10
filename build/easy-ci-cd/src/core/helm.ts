@@ -2,6 +2,7 @@ import { PipelineContext } from "./context";
 import { Shell } from "./shell";
 import { Render } from "./render";
 import { KubectlShell } from "./kubectrl";
+import { resolve } from "path";
 
 export class HelmShell {
   public config: HelmConfig;
@@ -21,14 +22,20 @@ export class HelmShell {
     await new Shell().execAsync(commandLine);
   }
 
-  public async install() {
-    let command = `install`;
-    return await this.deploy(command);
+  public async updateRepo() {
+    let command = `repo update`;
+    let commandLine = `${this.helmCommandAlias} ${command}`;
+    await new Shell().execAsync(commandLine);
   }
 
-  public async upgrade() {
+  public async install(clusterContextName: string) {
+    let command = `install`;
+    return await this.deploy(command, clusterContextName);
+  }
+
+  public async upgrade(clusterContextName: string) {
     let command = `upgrade`;
-    return await this.deploy(command);
+    return await this.deploy(command, clusterContextName);
   }
 
   public async uninstall() {
@@ -36,49 +43,64 @@ export class HelmShell {
     let commandLine = `${this.helmCommandAlias} ${command} -n ${this.config.namespace} ${this.appName}`;
   }
 
-  public async publish() {
+  public async publish(clusterContextName: string) {
     let kubectrl = new KubectlShell(this.context);
-    this.config.contexts.forEach(async (contextName) => {
-      await kubectrl.switch(contextName);
+    await kubectrl.switch(clusterContextName);
 
-      let releaseExist = true;
-      try {
-        await this.get();
-      } catch (e) {
-        releaseExist = false;
-      }
-      if (releaseExist) {
-        await this.upgrade();
-      } else {
-        await this.install();
-      }
+    let releaseExist = true;
+    try {
+      await this.get(clusterContextName);
+    } catch (e) {
+      releaseExist = false;
+    }
+    if (releaseExist) {
+      await this.upgrade(clusterContextName);
+    } else {
+      await this.install(clusterContextName);
+    }
+  }
+
+  public async publishAll() {
+    this.config.contexts.forEach(async (contextName) => {
+      await this.publish(contextName);
     });
   }
 
-  public async get() {
+  public async get(clusterContextName: string) {
     let command = `get all`;
-    let commandLine = `${this.helmCommandAlias} ${command} -n ${this.config.namespace} ${this.appName}`;
-    return await new Shell().execAsync(commandLine);
+    let useKubeconfig = this.useKubeconfig(clusterContextName);
+    let commandLine = `${this.helmCommandAlias} ${command} ${useKubeconfig} -n ${this.config.namespace} ${this.appName}`;
+    return await new Shell().execAsyncWithOptions(commandLine, {
+      printLog: false,
+    });
   }
 
   public render() {
     let render = new Render(this.context);
-    var renderFiles = render.renderDir(
-      this.chartValuesFolder,
-      this.renderedChartValuesFolder
-    );
+    this.config.contexts.forEach((contextName) => {
+      this.context.kubectl.contextName = contextName;
+      this.context.placeholders.set("contextName", contextName);
+      render.renderDir(this.chartValuesFolder, this.renderedChartValuesFolder);
+    });
   }
 
-  private async deploy(command: string) {
+  private async deploy(command: string, clusterContextName: string) {
     let render = new Render(this.context);
-    var renderFiles = render.renderDir(
-      this.chartValuesFolder,
-      this.renderedChartValuesFolder
-    );
-    //let fileNames = renderFiles.map(file => path.join(this.renderedChartValuesFolder, path.basename(file)));
-    let valuesYamlCommandLine = this.join(renderFiles, "-f");
-    let commandLine = `${this.helmCommandAlias} ${command} -n ${this.config.namespace} ${valuesYamlCommandLine} ${this.appName} ${this.config.chartName}`;
+    let fileNames = render.chartFiles(this.renderedChartValuesFolder);
+    let valuesYamlCommandLine = this.join(fileNames, "-f");
+    let kubeconfigCommand = this.useKubeconfig(clusterContextName);
+    let namespaceCommand = `-n ${this.config.namespace}`;
+    let commandLine = `${this.helmCommandAlias} ${command} ${kubeconfigCommand} ${namespaceCommand} ${valuesYamlCommandLine} ${this.appName} ${this.config.chartName}`;
     await new Shell().execAsync(commandLine);
+  }
+
+  private useKubeconfig(clusterContextName: string) {
+    let kubeconfigPath = resolve(
+      this.context.cwd,
+      this.config.kubeconfig,
+      `${clusterContextName}.yaml`
+    );
+    return ` --kubeconfig ${kubeconfigPath}`;
   }
 
   private replacePlaceholders(): string {
@@ -105,7 +127,7 @@ export class HelmShell {
   }
 
   public get renderedChartValuesFolder() {
-    return "./chart";
+    return this.config.valuesFolder;
   }
 }
 
@@ -117,4 +139,5 @@ export class HelmConfig {
   namespace!: string;
   appName!: string;
   contexts!: Array<string>;
+  kubeconfig!: string;
 }

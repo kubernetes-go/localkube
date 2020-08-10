@@ -1,9 +1,10 @@
 UNCOMMITTED=$(git status --porcelain)
-if [ -n "$UNCOMMITTED" ]; then
-    echo "uncommitted changes found"
-    exit 1
-fi
+# if [ -n "$UNCOMMITTED" ]; then
+#     echo "uncommitted changes found"
+#     exit 1
+# fi
 UPSTREAM=${1:-'@{u}'}
+echo $UPSTREAM
 LOCAL=$(git rev-parse @)
 REMOTE=$(git rev-parse "$UPSTREAM")
 BASE=$(git merge-base @ "$UPSTREAM")

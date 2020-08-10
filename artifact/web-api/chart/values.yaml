@@ -2,10 +2,12 @@ appFromExternalRepo:
   enabled: false
 image:
   repository: wujun4code/asp-net-core
-  tag: master-b7f5103
+  tag: first-3c2236a
 command: [dotnet]
 args: [SampleNetCoreWebApp.dll]
 containerPort: 80
 bindURLs: http://+:80
 extraEnvVars:
-  DockerImageTag: master-b7f5103
+  DockerImageTag: first-3c2236a
+commonLabels:
+  eid/version: 0.0.1

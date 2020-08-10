@@ -7,5 +7,9 @@
       "source.fixAll.eslint": true
     },
     "editor.formatOnSave": true
+  },
+  "eslint.codeAction.showDocumentation": {
+  
+    "enable": true
   }
 }

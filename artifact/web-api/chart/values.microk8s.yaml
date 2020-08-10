@@ -1,3 +1,3 @@
 extraEnvVars:
   foo: bar
-  cluster: 
+  cluster: microk8s

@@ -1,24 +1,12 @@
 import { Command, flags } from "@oclif/command";
-import { safeLoadAll } from "js-yaml";
-import { readFileSync } from "fs";
-import {
-  PipelineContext,
-  CommonContext,
-  DockerContext,
-  HelmContext,
-} from "../core/context";
-import { DockerShell, DockerConfig } from "../core/docker";
-import { HelmConfig, HelmShell } from "../core/helm";
-import { resolve } from "path";
+import { PipelineContext } from "../core/context";
+import { DockerShell } from "../core/docker";
+import { GitShell } from "../core/git";
 
 export default class Build extends Command {
   static description = "describe the command here";
 
-  static examples = [
-    `$ easy-ci-cd build
-hello world from ./src/hello.ts!
-`,
-  ];
+  static examples = [`$ easy-ci-cd build -a web-api`];
 
   static flags = {
     help: flags.help({ char: "h" }),
@@ -32,23 +20,16 @@ hello world from ./src/hello.ts!
     const { args, flags } = this.parse(Build);
 
     let pipelineContext: PipelineContext = new PipelineContext();
-    pipelineContext.git = {
-      branchName: "master",
-      commitHash: "b7f5103",
-    };
-
+    let gitShell = new GitShell({}, pipelineContext);
+    await gitShell.importContext({ force: false });
     try {
       const app = flags.app ?? "app";
-      pipelineContext.appFolderName = app;
-      let fileContents = readFileSync(
-        resolve(pipelineContext.cwd, app, "build.yaml"),
-        "utf8"
-      );
-      let data = safeLoadAll(fileContents);
-      let dockerPipeline = data.find((c) => c.kind == "docker");
-      let dockerConfig: DockerConfig = dockerPipeline;
+      pipelineContext.loadBuildYaml(app);
 
-      let dockerShell = new DockerShell(dockerConfig, pipelineContext);
+      let dockerShell = new DockerShell(
+        pipelineContext.docker.config,
+        pipelineContext
+      );
       await dockerShell.build();
       await dockerShell.push();
     } catch (e) {
